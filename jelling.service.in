@@ -1,0 +1,10 @@
+[Unit]
+Description=Jelling BTLE OTP Receiver daemon
+Requires=bluetooth.service
+After=bluetooth.service
+
+[Service]
+ExecStart=@libexecdir@/jelling
+
+[Install]
+WantedBy=multi-user.target
