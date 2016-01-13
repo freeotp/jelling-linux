@@ -259,7 +259,7 @@ static const sd_bus_vtable chr_vtable[] = {
     METH("ReadValue", "", "ay", chr_notsup),
     METH("WriteValue", "ay", "", chr_writevalue),
     METH("StartNotify", "", "", chr_notsup),
-    METH("StopNotify", "ay", "", chr_stopnotify),
+    METH("StopNotify", "", "", chr_stopnotify),
     SD_BUS_VTABLE_END
 };
 
