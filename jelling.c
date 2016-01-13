@@ -31,6 +31,7 @@
 #include <systemd/sd-bus.h>
 
 #define MAN_PATH "/"
+#define ADV_PATH "/"
 #define SVC_PATH "/svc"
 #define CHR_PATH "/svc/chr"
 #define SVC_UUID "B670003C-0079-465C-9BA7-6C0539CCD67F"
@@ -97,6 +98,44 @@ char2key(uint8_t c)
     case '9': return KEY_9;
     default: return KEY_UNKNOWN;
     }
+}
+
+static int
+adv_props(sd_bus *bus, const char *path, const char *interface,
+          const char *property, sd_bus_message *reply, void *userdata,
+          sd_bus_error *ret_error)
+{
+    const char *type;
+    int r;
+
+    if (strcmp(property, "Type") == 0)
+        return sd_bus_message_append(reply, "s", "broadcast");
+
+    if (strcmp(property, "IncludeTxPower") == 0)
+        return sd_bus_message_append(reply, "b", true);
+
+    if (strcmp(property, "ServiceUUIDs") == 0)
+        type = "s";
+    else if (strcmp(property, "SolicitUUIDs") == 0)
+        type = "s";
+    else if (strcmp(property, "ManufacturerData") == 0)
+        type = "{qay}";
+    else if (strcmp(property, "ServiceData") == 0)
+        type = "{say}";
+    else
+        return -ENOENT;
+
+    r = sd_bus_message_open_container(reply, 'a', type);
+    if (r < 0)
+        return r;
+
+    if (strcmp(property, "ServiceUUIDs") == 0) {
+        r = sd_bus_message_append(reply, "s", SVC_UUID);
+        if (r < 0)
+            return r;
+    }
+
+    return sd_bus_message_close_container(reply);
 }
 
 static int
@@ -236,10 +275,22 @@ chr_writevalue(sd_bus_message *m, void *misc, sd_bus_error *err)
 }
 
 static int
-chr_stopnotify(sd_bus_message *m, void *misc, sd_bus_error *err)
+meth_noop(sd_bus_message *m, void *misc, sd_bus_error *err)
 {
     return sd_bus_reply_method_return(m, "");
 }
+
+static const sd_bus_vtable adv_vtable[] = {
+    SD_BUS_VTABLE_START(0),
+    PROP("Type", "s", adv_props),
+    PROP("ServiceUUIDs", "as", adv_props),
+    PROP("ManufacturerData", "a{qay}", adv_props),
+    PROP("SolicitUUIDs", "as", adv_props),
+    PROP("ServiceData", "a{say}", adv_props),
+    PROP("IncludeTxPower", "b", adv_props),
+    METH("Release", "", "", meth_noop),
+    SD_BUS_VTABLE_END
+};
 
 static const sd_bus_vtable svc_vtable[] = {
     SD_BUS_VTABLE_START(0),
@@ -260,7 +311,7 @@ static const sd_bus_vtable chr_vtable[] = {
     METH("ReadValue", "", "ay", chr_notsup),
     METH("WriteValue", "ay", "", chr_writevalue),
     METH("StartNotify", "", "", chr_notsup),
-    METH("StopNotify", "", "", chr_stopnotify),
+    METH("StopNotify", "", "", meth_noop),
     SD_BUS_VTABLE_END
 };
 
@@ -268,7 +319,7 @@ static int
 on_reply(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 {
     if (sd_bus_error_is_set(ret_error))
-        fprintf(stderr, "Error registering GATT service: %s: %s\n",
+        fprintf(stderr, "Error registering: %s: %s\n",
                 ret_error->name, ret_error->message);
 
     return 0;
@@ -311,6 +362,14 @@ on_bt_iface(sd_bus_message *m, void *bus, sd_bus_error *ret_error)
             r = sd_bus_call_method_async(bus, NULL, "org.bluez", obj, iface,
                                          "RegisterApplication", on_reply, NULL,
                                          "oa{sv}", MAN_PATH, 0);
+            if (r < 0)
+                return r;
+        }
+
+        if (strcmp(iface, "org.bluez.LEAdvertisingManager1") == 0) {
+            r = sd_bus_call_method_async(bus, NULL, "org.bluez", obj, iface,
+                                         "RegisterAdvertisement", on_reply, NULL,
+                                         "oa{sv}", ADV_PATH, 0);
             if (r < 0)
                 return r;
         }
@@ -400,6 +459,12 @@ setup_objects(sd_bus *bus, uinput *i)
     r = sd_bus_add_object_manager(bus, NULL, MAN_PATH);
     if (r < 0)
         error(EXIT_FAILURE, -r, "Error adding object manager");
+
+    r = sd_bus_add_object_vtable(bus, NULL, ADV_PATH,
+                                 "org.bluez.LEAdvertisement1",
+                                 adv_vtable, i);
+    if (r < 0)
+        error(EXIT_FAILURE, -r, "Error creating advertisement");
 
     r = sd_bus_add_object_vtable(bus, NULL, SVC_PATH,
                                  "org.bluez.GattService1",
