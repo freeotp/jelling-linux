@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT(jelling, 0.1)
+AC_INIT(jelling, 1)
 AC_PROG_CC_C99
 AC_PROG_SED
 
