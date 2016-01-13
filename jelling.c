@@ -30,8 +30,9 @@
 #include <linux/uinput.h>
 #include <systemd/sd-bus.h>
 
-#define SVC_PATH "/"
-#define CHR_PATH "/chr"
+#define MAN_PATH "/"
+#define SVC_PATH "/svc"
+#define CHR_PATH "/svc/chr"
 #define SVC_UUID "B670003C-0079-465C-9BA7-6C0539CCD67F"
 #define CHR_UUID "F4186B06-D796-4327-AF39-AC22C50BDCA8"
 
@@ -308,8 +309,8 @@ on_bt_iface(sd_bus_message *m, void *bus, sd_bus_error *ret_error)
 
         if (strcmp(iface, "org.bluez.GattManager1") == 0) {
             r = sd_bus_call_method_async(bus, NULL, "org.bluez", obj, iface,
-                                         "RegisterService", on_reply, NULL,
-                                         "oa{sv}", SVC_PATH, 0);
+                                         "RegisterApplication", on_reply, NULL,
+                                         "oa{sv}", MAN_PATH, 0);
             if (r < 0)
                 return r;
         }
@@ -396,7 +397,7 @@ setup_objects(sd_bus *bus, uinput *i)
 {
     int r;
 
-    r = sd_bus_add_object_manager(bus, NULL, SVC_PATH);
+    r = sd_bus_add_object_manager(bus, NULL, MAN_PATH);
     if (r < 0)
         error(EXIT_FAILURE, -r, "Error adding object manager");
 
