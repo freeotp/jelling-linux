@@ -31,7 +31,7 @@
 #include <systemd/sd-bus.h>
 
 #define MAN_PATH "/"
-#define ADV_PATH "/"
+#define ADV_PATH "/adv"
 #define SVC_PATH "/svc"
 #define CHR_PATH "/svc/chr"
 #define SVC_UUID "B670003C-0079-465C-9BA7-6C0539CCD67F"
