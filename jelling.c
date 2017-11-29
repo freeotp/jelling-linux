@@ -38,6 +38,9 @@
 #define SVC_UUID "B670003C-0079-465C-9BA7-6C0539CCD67F"
 #define CHR_UUID "F4186B06-D796-4327-AF39-AC22C50BDCA8"
 
+#define CHR_FLAGS "encrypt-authenticated-write"
+#define CHR_NFLAG 1
+
 #define PROP(name, sig, func) \
     SD_BUS_PROPERTY(name, sig, func, 0, SD_BUS_VTABLE_PROPERTY_CONST)
 
@@ -106,37 +109,16 @@ adv_props(sd_bus *bus, const char *path, const char *interface,
           const char *property, sd_bus_message *reply, void *userdata,
           sd_bus_error *ret_error)
 {
-    const char *type;
-    int r;
-
     if (strcmp(property, "Type") == 0)
         return sd_bus_message_append(reply, "s", "broadcast");
 
-    if (strcmp(property, "IncludeTxPower") == 0)
-        return sd_bus_message_append(reply, "b", true);
-
     if (strcmp(property, "ServiceUUIDs") == 0)
-        type = "s";
-    else if (strcmp(property, "SolicitUUIDs") == 0)
-        type = "s";
-    else if (strcmp(property, "ManufacturerData") == 0)
-        type = "{qay}";
-    else if (strcmp(property, "ServiceData") == 0)
-        type = "{say}";
-    else
-        return -ENOENT;
+        return sd_bus_message_append(reply, "as", 1, SVC_UUID);
 
-    r = sd_bus_message_open_container(reply, 'a', type);
-    if (r < 0)
-        return r;
+    if (strcmp(property, "Includes") == 0)
+        return sd_bus_message_append(reply, "as", 1, "local-name");
 
-    if (strcmp(property, "ServiceUUIDs") == 0) {
-        r = sd_bus_message_append(reply, "s", SVC_UUID);
-        if (r < 0)
-            return r;
-    }
-
-    return sd_bus_message_close_container(reply);
+    return -ENOENT;
 }
 
 static int
@@ -144,25 +126,16 @@ svc_props(sd_bus *bus, const char *path, const char *interface,
           const char *property, sd_bus_message *reply, void *userdata,
           sd_bus_error *ret_error)
 {
-    int r;
-
     if (strcmp(property, "UUID") == 0)
         return sd_bus_message_append(reply, "s", SVC_UUID);
 
     if (strcmp(property, "Primary") == 0)
         return sd_bus_message_append(reply, "b", true);
 
-    r = sd_bus_message_open_container(reply, 'a', "o");
-    if (r < 0)
-        return r;
+    if (strcmp(property, "Includes") == 0)
+        return sd_bus_message_append(reply, "ao", 0);
 
-    if (strcmp(property, "Characteristics") == 0) {
-        r = sd_bus_message_append(reply, "o", CHR_PATH);
-        if (r < 0)
-            return r;
-    }
-
-    return sd_bus_message_close_container(reply);
+    return -ENOENT;
 }
 
 static int
@@ -170,37 +143,16 @@ chr_props(sd_bus *bus, const char *path, const char *interface,
           const char *property, sd_bus_message *reply, void *userdata,
           sd_bus_error *ret_error)
 {
-    const char *type;
-    int r;
-
     if (strcmp(property, "UUID") == 0)
         return sd_bus_message_append(reply, "s", CHR_UUID);
 
     if (strcmp(property, "Service") == 0)
         return sd_bus_message_append(reply, "o", SVC_PATH);
 
-    if (strcmp(property, "Notifying") == 0)
-        return sd_bus_message_append(reply, "b", false);
+    if (strcmp(property, "Flags") == 0)
+        return sd_bus_message_append(reply, "as", CHR_NFLAG, CHR_FLAGS);
 
-    if (strcmp(property, "Flags") == 0) {
-        type = "s";
-    } else if (strcmp(property, "Descriptors") == 0) {
-        type = "o";
-    } else {
-        return -ENOENT;
-    }
-
-    r = sd_bus_message_open_container(reply, 'a', type);
-    if (r < 0)
-        return r;
-
-    if (strcmp(property, "Flags") == 0) {
-        r = sd_bus_message_append(reply, type, "encrypt-authenticated-write");
-        if (r < 0)
-            return r;
-    }
-
-    return sd_bus_message_close_container(reply);
+    return -ENOENT;
 }
 
 static int
@@ -285,10 +237,7 @@ static const sd_bus_vtable adv_vtable[] = {
     SD_BUS_VTABLE_START(0),
     PROP("Type", "s", adv_props),
     PROP("ServiceUUIDs", "as", adv_props),
-    PROP("ManufacturerData", "a{qay}", adv_props),
-    PROP("SolicitUUIDs", "as", adv_props),
-    PROP("ServiceData", "a{say}", adv_props),
-    PROP("IncludeTxPower", "b", adv_props),
+    PROP("Includes", "as", adv_props),
     METH("Release", "", "", meth_noop),
     SD_BUS_VTABLE_END
 };
@@ -297,7 +246,6 @@ static const sd_bus_vtable svc_vtable[] = {
     SD_BUS_VTABLE_START(0),
     PROP("UUID", "s", svc_props),
     PROP("Primary", "b", svc_props),
-    PROP("Characteristics", "ao", svc_props),
     PROP("Includes", "ao", svc_props),
     SD_BUS_VTABLE_END
 };
@@ -306,11 +254,9 @@ static const sd_bus_vtable chr_vtable[] = {
     SD_BUS_VTABLE_START(0),
     PROP("UUID", "s", chr_props),
     PROP("Service", "o", chr_props),
-    PROP("Notifying", "b", chr_props),
     PROP("Flags", "as", chr_props),
-    PROP("Descriptors", "ao", chr_props),
-    METH("ReadValue", "", "ay", chr_notsup),
-    METH("WriteValue", "ay", "", chr_writevalue),
+    METH("ReadValue", "a{sv}", "ay", chr_notsup),
+    METH("WriteValue", "aya{sv}", "", chr_writevalue),
     METH("StartNotify", "", "", chr_notsup),
     METH("StopNotify", "", "", meth_noop),
     SD_BUS_VTABLE_END
