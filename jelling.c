@@ -110,7 +110,7 @@ adv_props(sd_bus *bus, const char *path, const char *interface,
           sd_bus_error *ret_error)
 {
     if (strcmp(property, "Type") == 0)
-        return sd_bus_message_append(reply, "s", "broadcast");
+        return sd_bus_message_append(reply, "s", "peripheral");
 
     if (strcmp(property, "ServiceUUIDs") == 0)
         return sd_bus_message_append(reply, "as", 1, SVC_UUID);
