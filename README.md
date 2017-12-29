@@ -1,5 +1,26 @@
 Jelling is a simple daemon for Linux which receives OTP tokens from FreeOTP.
 
+# How to Build and Install
+
+    # dnf install meson
+    # mkdir build
+    # cd build
+    # meson ..
+    # ninja
+    # ninja install
+
+# How to Run
+
+1. Ensure that bluez is running with the -E option. You may have to edit or
+   override the systemd bluetooth.service file. This enables the unstable
+   bluez dbus APIs.
+
+2. Enable Jelling:
+
+    # systemctl enable jelling.service
+
+3. Reboot
+
 # Test Results
 
 |   Device   |        OS        | Adv. | Connect | Discovery | Pair | GATT |
