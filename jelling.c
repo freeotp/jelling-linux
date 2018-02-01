@@ -483,7 +483,7 @@ main(int argc, char *argv[])
     signal(SIGUSR1, on_signal);
     signal(SIGUSR2, on_signal);
 
-    r = sd_bus_open_system(&bus);
+    r = sd_bus_default_system(&bus);
     if (r < 0)
         error(EXIT_FAILURE, -r, "Error connecting to system bus");
 
