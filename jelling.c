@@ -38,7 +38,7 @@
 #define SVC_UUID "B670003C-0079-465C-9BA7-6C0539CCD67F"
 #define CHR_UUID "F4186B06-D796-4327-AF39-AC22C50BDCA8"
 
-#define CHR_FLAGS "encrypt-authenticated-write"
+#define CHR_FLAGS "secure-write"
 #define CHR_NFLAG 1
 
 #define PROP(name, sig, func) \

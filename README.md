@@ -25,7 +25,7 @@ Jelling is a simple daemon for Linux which receives OTP tokens from FreeOTP.
 
 |   Device   |        OS        | Adv. | Connect | Discovery | Pair | GATT |
 | ---------- | ---------------- | ---- | ------- | --------- | ---- | ---- |
-|  iPhone 6+ | iOS 11.2         |  ✔   |    ✔    |     ✔     |  ✘   |  ✘   |
+|  iPhone 6+ | iOS 11.2         |  ✔   |    ✔    |     ✔     |  ✔   |  ✔   |
 |   Nexus 5x | LineageOS 14.1   |  ✔   |    ✔    |     ✘     |  ✘   |  ✘   |
 |      Pixel | Android 8.1 beta |  ✔   |    ✘    |     ✘     |  ✘   |  ✘   |
 
