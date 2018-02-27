@@ -4,6 +4,7 @@ libexecdir = join_paths(get_option('prefix'), get_option('libexecdir'))
 
 libsystemd = dependency('libsystemd', version: '>=221')
 systemd = dependency('systemd', version: '>=221')
+bluez = dependency('bluez', version: '>=5.42')
 
 unitdir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
 modsdir = systemd.get_pkgconfig_variable('modulesloaddir')
