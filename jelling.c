@@ -189,7 +189,7 @@ chr_writevalue(sd_bus_message *m, void *misc, sd_bus_error *err)
     size_t size = 0;
     int r;
 
-    r = sd_bus_message_has_signature(m, "ay");
+    r = sd_bus_message_has_signature(m, "aya{sv}");
     if (r < 0)
         return r;
 
