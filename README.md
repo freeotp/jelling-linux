@@ -5,8 +5,13 @@ Jelling is a simple daemon for Linux which receives OTP tokens from FreeOTP.
     * systemd >= 221
     * bluez >= 5.42
 
+# How to install Build Dependencies on Fedora
+
+    # dnf install bluez-libs-devel ninja-build systemd-devel
+
 # How to Build and Install
 
+    
     # meson build
     # ninja -C build
     # ninja -C build install
