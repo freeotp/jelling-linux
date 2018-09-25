@@ -2,6 +2,7 @@ Jelling is a simple daemon for Linux which receives OTP tokens from FreeOTP.
 
 # Dependencies
 
+    * Kernel     CONFIG_INPUT_UINPUT={y/m}
     * systemd >= 221
     * bluez >= 5.42
 
